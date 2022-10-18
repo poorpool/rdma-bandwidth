@@ -1,6 +1,7 @@
 #include "ib.h"
 #include "debug.h"
 #include <stdio.h>
+#include <arpa/inet.h>
 
 // copied
 
@@ -88,4 +89,50 @@ void printQPInfo(const char *hint, struct QPInfo *qwq) {
     printf("lid %d\n", qwq->lid);
     printf("qpNum %d\n", qwq->qpNum);
     printf("gidIndex %d\n", qwq->gidIndex);
+}
+int post_send(uint32_t req_size, uint32_t lkey, uint64_t wr_id,
+	       uint32_t imm_data, struct ibv_qp *qp, char *buf)
+{
+    int ret = 0;
+    struct ibv_send_wr *bad_send_wr;
+
+    struct ibv_sge list = {
+	.addr   = (uintptr_t) buf,
+	.length = req_size,
+	.lkey   = lkey
+    };
+
+    struct ibv_send_wr send_wr = {
+	.wr_id      = wr_id,
+	.sg_list    = &list,
+	.num_sge    = 1,
+	.opcode     = IBV_WR_SEND_WITH_IMM,
+	.send_flags = IBV_SEND_SIGNALED,
+	.imm_data   = htonl (imm_data)
+    };
+
+    ret = ibv_post_send (qp, &send_wr, &bad_send_wr);
+    return ret;
+}
+
+int post_recv (uint32_t req_size, uint32_t lkey, uint64_t wr_id, 
+	       struct ibv_qp *qp, char *buf)
+{
+    int ret = 0;
+    struct ibv_recv_wr *bad_recv_wr;
+
+    struct ibv_sge list = {
+	.addr   = (uintptr_t) buf,
+	.length = req_size,
+	.lkey   = lkey
+    };
+
+    struct ibv_recv_wr recv_wr = {
+	.wr_id   = wr_id,
+	.sg_list = &list,
+	.num_sge = 1
+    };
+
+    ret = ibv_post_recv (qp, &recv_wr, &bad_recv_wr);
+    return ret;
 }

@@ -87,6 +87,9 @@ int connectQPAsClient() {
     
     printQPInfo("local from client", &localQPInfo);
     printQPInfo("remote from client", &remoteQPInfo);
+    
+    ret = modifyQP2RTS(ibRes.qp, &localQPInfo, &remoteQPInfo);
+    check(ret == 0, "failed to modify qp to rts");
 
     char buf[55] = "hello";
 

@@ -1,6 +1,7 @@
 #include "debug.h"
 #include "config.h"
 #include "setup_ib.h"
+#include "cs.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -57,6 +58,12 @@ int main(int argc, char *argv[]) {
     check(ret == 0, "failed to init env");
 
     ret = setupIB();
+
+    if (configInfo.isServer) {
+        ret = server_func();
+    } else {
+        ret = client_func();
+    }
 
     destroyEnv();
     return 0;
