@@ -4,6 +4,9 @@
 #include <inttypes.h>
 #include <infiniband/verbs.h>
 
+#define IB_PORT 1
+#define IB_SL 0
+
 struct QPInfo {
     uint16_t lid;
     uint32_t qpNum;
@@ -12,5 +15,7 @@ struct QPInfo {
 };
 
 extern void printQPInfo(const char *hint, struct QPInfo *qwq);
+
+extern int modifyQP2RTS (struct ibv_qp *qp, struct QPInfo *local, struct QPInfo *remote);
 
 #endif

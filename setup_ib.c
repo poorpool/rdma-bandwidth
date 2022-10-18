@@ -11,11 +11,9 @@
 
 struct IBRes ibRes;
 
-int PORT_NUM = 1; // 这啥啊？？
-
-
 int connectQPAsServer() {
     int ret = 0, peer_fd = 0;
+    int n = 0;
     int fd = sock_create_bind(configInfo.serverPort);
     check(fd > 0, "failed to create and bind socket");
     listen(fd, 5);
@@ -31,16 +29,28 @@ int connectQPAsServer() {
         .gidIndex = ibRes.gidIndex,
     }, remoteQPInfo;
     if (localQPInfo.lid == 0 && ibRes.portAttr.link_layer == IBV_LINK_LAYER_ETHERNET) {
-        ret = ibv_query_gid(ibRes.ctx, PORT_NUM, localQPInfo.gidIndex, &localQPInfo.gid);
+        ret = ibv_query_gid(ibRes.ctx, IB_PORT, localQPInfo.gidIndex, &localQPInfo.gid);
 	    check (ret == 0, "failed to get gid");
     }
-    ret = sock_read(peer_fd, &remoteQPInfo, sizeof(struct QPInfo));
-    check(ret == sizeof(struct QPInfo), "server read qp info from client failed");
-    ret = sock_write(peer_fd, &localQPInfo, sizeof(struct QPInfo));
-    check(ret == sizeof(struct QPInfo), "server write qp info to client failed");
+    n = sock_read(peer_fd, &remoteQPInfo, sizeof(struct QPInfo));
+    check(n == sizeof(struct QPInfo), "server read qp info from client failed");
+    n = sock_write(peer_fd, &localQPInfo, sizeof(struct QPInfo));
+    check(n == sizeof(struct QPInfo), "server write qp info to client failed");
     
     printQPInfo("local from server", &localQPInfo);
     printQPInfo("remote from server", &remoteQPInfo);
+
+    ret = modifyQP2RTS(ibRes.qp, &localQPInfo, &remoteQPInfo);
+    check(ret == 0, "failed to modify qp to rts");
+
+    char buf[55] = "";
+    n = sock_read (peer_fd, buf, 5);
+    check(n == 5, "failed to receive sync from client");
+
+    n = sock_write (peer_fd, buf, 5);
+    check(n == 5, "failed to write sync to client");
+    
+    log("connectQPAsServer done\n");
 
     close(peer_fd);
     close(fd);
@@ -57,6 +67,7 @@ error:
 
 int connectQPAsClient() {
     int ret = 0;
+    int n = 0;
     int fd = sock_create_connect(configInfo.serverName, configInfo.serverPort);
     check(fd > 0, "failed to create and connect socket");
 
@@ -66,7 +77,7 @@ int connectQPAsClient() {
         .gidIndex = ibRes.gidIndex,
     }, remoteQPInfo;
     if (localQPInfo.lid == 0 && ibRes.portAttr.link_layer == IBV_LINK_LAYER_ETHERNET) {
-        ret = ibv_query_gid(ibRes.ctx, PORT_NUM, localQPInfo.gidIndex, &localQPInfo.gid);
+        ret = ibv_query_gid(ibRes.ctx, IB_PORT, localQPInfo.gidIndex, &localQPInfo.gid);
 	    check (ret == 0, "failed to get gid");
     }
     ret = sock_write(fd, &localQPInfo, sizeof(struct QPInfo));
@@ -76,6 +87,16 @@ int connectQPAsClient() {
     
     printQPInfo("local from client", &localQPInfo);
     printQPInfo("remote from client", &remoteQPInfo);
+
+    char buf[55] = "hello";
+
+    n = sock_write (fd, buf, 5);
+    check(n == 5, "failed to write sync to server");
+
+    n = sock_read (fd, buf, 5);
+    check(n == 5, "failed to receive sync from server");
+
+    log("connectQPAsClient done\n");
 
     close(fd);
     return 0;
@@ -133,7 +154,7 @@ int setupIB() {
     check(ibRes.qp != NULL, "failed to create qp");
 
     // 6. Query IB port attribute
-    ret = ibv_query_port(ibRes.ctx, PORT_NUM, &ibRes.portAttr);
+    ret = ibv_query_port(ibRes.ctx, IB_PORT, &ibRes.portAttr);
     check(ret == 0, "failed to query port attr");
     ibRes.gidIndex = configInfo.gidIndex;
     printf("device %s has %d gids\n", ibRes.ctx->device->name, ibRes.portAttr.gid_tbl_len);
