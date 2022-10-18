@@ -1,5 +1,6 @@
 #include "debug.h"
 #include "config.h"
+#include "setup_ib.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -54,6 +55,8 @@ int main(int argc, char *argv[]) {
 
     ret = initEnv();
     check(ret == 0, "failed to init env");
+
+    ret = setupIB();
 
     destroyEnv();
     return 0;

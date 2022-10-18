@@ -4,7 +4,7 @@ INCLUDES=
 LDFLAGS=-libverbs
 LIBS=-pthread
 
-SRCS=main.c config.c
+SRCS=main.c config.c setup_ib.c
 OBJS=$(SRCS:.c=.o)
 PROG=rdma-bandwidth
 
