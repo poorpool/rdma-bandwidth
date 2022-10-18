@@ -12,9 +12,9 @@ void printConfigInfo() {
     log("devIndex = %d", configInfo.devIndex);
     log("gidIndex = %d", configInfo.gidIndex);
     if (configInfo.isServer) {
-        log("listenPort = %s", configInfo.serverPort);
+        log("listenPort = %d", configInfo.serverPort);
     } else {
-        log("serverPort = %s", configInfo.serverPort);
+        log("serverPort = %d", configInfo.serverPort);
         log("serverName = %s", configInfo.serverName);
     }
     

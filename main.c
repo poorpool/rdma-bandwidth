@@ -37,14 +37,14 @@ int main(int argc, char *argv[]) {
         configInfo.numConcurrMsgs = atoi(argv[2]);
         configInfo.devIndex = atoi(argv[3]);
         configInfo.gidIndex = atoi(argv[4]);
-        configInfo.serverPort = argv[5];
+        configInfo.serverPort = atoi(argv[5]);
     } else if (argc == 7) {
         configInfo.isServer = false;
         configInfo.msgSize = atoi(argv[1]);
         configInfo.numConcurrMsgs = atoi(argv[2]);
         configInfo.devIndex = atoi(argv[3]);
         configInfo.gidIndex = atoi(argv[4]);
-        configInfo.serverPort = argv[5];
+        configInfo.serverPort = atoi(argv[5]);
         configInfo.serverName = argv[6];
     } else {
         printf("usage:\n");
